@@ -14,21 +14,19 @@ Implémenter toute la logique de gestion de la bibliothèque dans un seul script
 ### Fonctionnalités implémentées
 
 - Connexion à la base de données PostgreSQL via SQLAlchemy.
-- Opérations CRUD (Ajouter, Lire, Modifier, Supprimer) fonctionnelles sur la table `Book`.
-- Validation stricte des données :
+- Opérations CRUD (Ajouter, Lire, Modifier, Supprimer) sur la table `Book`.
+- Validation des données :
   - Blocage des identifiants invalides.
   - Interdiction des stocks négatifs.
   - Interdiction des tarifs négatifs.
 
 ### Question — Quelles sont les limites de cette approche monolithique ?
 
-L'approche monolithique, bien que simple à mettre en place initialement, présente plusieurs limites majeures :
+1. **Couplage fort :** l'interface, la logique métier et la base de données sont liées. Une modification peut donc affecter plusieurs parties du code.
 
-1. **Couplage fort :** le code de l'interface graphique (UI) est intimement lié à la logique métier et à l'accès aux données. Une modification de la base de données implique souvent de retoucher l'interface.
+2. **Accès limité :** l'application fonctionne localement et ne permet pas à d'autres applications d'accéder à ses fonctionnalités via une API.
 
-2. **Fermeture au réseau :** le système n'est pas distribué et s'exécute uniquement en local. Il est impossible pour d'autres clients, comme une application mobile ou un site web externe, de consommer ces données, car aucune API n'est exposée.
-
-3. **Problème d'évolutivité (Scalability) :** si l'application s'enrichit de nouvelles fonctionnalités, le fichier unique deviendra très lourd, difficile à maintenir, à tester et à faire évoluer en équipe.
+3. **Maintenance difficile :** lorsque le projet grandit, le code devient plus complexe et plus difficile à modifier et à tester.
 
 ### Captures d'écran — Tests de la partie 1
 
@@ -52,13 +50,13 @@ Pour démarrer le service SOAP, exécuter la commande suivante depuis un termina
 python soap_service.py
 ```
 
-Le serveur écoutera à l'adresse suivante :
+Le serveur écoute à l'adresse suivante :
 
 [http://localhost:8000/](http://localhost:8000/)
 
 ### WSDL
 
-Le contrat du service est accessible via l'URL suivante :
+Le contrat du service est accessible à l'adresse suivante :
 
 [http://localhost:8000/?wsdl](http://localhost:8000/?wsdl)
 
@@ -66,14 +64,53 @@ Le fichier WSDL a été sauvegardé à la racine du dépôt sous le nom `library
 
 ### Tests Postman
 
-**1. Test de succès : création d'un livre valide.**
+**1. Test de succès : création d'un livre valide**
+
 ![Création SOAP](captures/p2_create_soap.png)
 
-**2. Test d'erreur : validation interceptée lors de la saisie d'un stock négatif.**
+**2. Test d'erreur : blocage d'un stock négatif**
+
 ![Erreur SOAP](captures/p2_erreur_soap.png)
 
 ### Question 6 — En quoi SOAP impose-t-il davantage de structure et de contrats que le monolithe ?
 
-SOAP impose un contrat rigide via le fichier WSDL et utilise un format de transport structuré en XML. Contrairement au monolithe, où les composants communiquent de manière implicite via des objets Python en mémoire, SOAP oblige le client et le serveur à respecter les types de données (`Integer`, `String`, etc.) définis à l'avance.
+SOAP utilise un fichier WSDL qui définit les opérations disponibles et les types de données. Les échanges entre le client et le serveur se font en XML selon une structure précise. Les erreurs peuvent aussi être renvoyées dans un format standard appelé SOAP Fault.
 
-La gestion des exceptions est également encadrée : toute erreur métier locale, comme une `ValueError`, doit être standardisée sous la forme d'une balise `<soap11env:Fault>` pour garantir l'interopérabilité avec des clients distants.
+---
+
+## Partie 3 — API REST
+
+### Lancement
+
+Pour construire les images et lancer l'API ainsi que la base de données via Docker, exécuter la commande suivante :
+
+```bash
+docker-compose up --build
+```
+
+### Documentation OpenAPI
+
+La documentation interactive (Swagger UI) est générée automatiquement et accessible aux adresses suivantes :
+
+- **Swagger UI :** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Schéma OpenAPI :** [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
+
+### Tests de l'API
+
+**1. Vue d'ensemble de l'interface Swagger**
+
+![Interface Swagger](captures/part3.png)
+
+**2. Préparation de la requête de création d'un livre (`POST /books`)**
+
+![Requête POST](captures/post3.png)
+
+**3. Création réussie d'un livre (code HTTP 201)**
+
+![Résultat Swagger](captures/resp3.png)
+
+### Question 6 — Comparaison SOAP vs REST (lisibilité, facilité d'utilisation, intégration)
+
+- **Lisibilité :** REST utilise généralement JSON, plus léger et plus facile à lire que le XML de SOAP.
+- **Facilité d'utilisation :** REST utilise les méthodes HTTP (`GET`, `POST`, `PUT`, `DELETE`), ce qui facilite les opérations CRUD. SOAP suit une structure de messages plus stricte.
+- **Intégration :** REST s'intègre facilement aux applications web et mobiles, notamment grâce à JSON. SOAP utilise un contrat WSDL et des messages XML qui nécessitent parfois des outils spécifiques.

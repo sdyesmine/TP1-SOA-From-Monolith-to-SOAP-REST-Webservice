@@ -1,28 +1,28 @@
-# version: '3.8'
-# services:
-#   db:
-#     image: postgres
-#     container_name: library_db
-#     environment:
-#       POSTGRES_USER: library
-#       POSTGRES_PASSWORD: library
-#       POSTGRES_DB: library
-#     ports:
-#       - "5432:5432"
-#     volumes:
-#       - ~/data:/var/lib/postgresql/data
+version: '3.8'
 services:
   db:
-    image: postgres:16
+    image: postgres
     container_name: library_db
     environment:
       POSTGRES_USER: library
       POSTGRES_PASSWORD: library
       POSTGRES_DB: library
     ports:
-      - "5433:5432"  # <-- Modifiez cette ligne
+      - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ~/data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U library"]
+      interval: 5s
+      retries: 5
 
-volumes:
-  pgdata:
+  api:
+    build: .
+    container_name: library_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://library:library@db:5432/library
+    depends_on:
+      db:
+        condition: service_healthy
