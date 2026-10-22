@@ -1,0 +1,28 @@
+# version: '3.8'
+# services:
+#   db:
+#     image: postgres
+#     container_name: library_db
+#     environment:
+#       POSTGRES_USER: library
+#       POSTGRES_PASSWORD: library
+#       POSTGRES_DB: library
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - ~/data:/var/lib/postgresql/data
+services:
+  db:
+    image: postgres:16
+    container_name: library_db
+    environment:
+      POSTGRES_USER: library
+      POSTGRES_PASSWORD: library
+      POSTGRES_DB: library
+    ports:
+      - "5433:5432"  # <-- Modifiez cette ligne
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
